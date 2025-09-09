@@ -270,4 +270,4 @@ def handle_get_stats():
     emit('stats', stats)
 
 if __name__ == '__main__':
-    socketio.run(app, debug=True, port=5002)
+    socketio.run(app, debug=True, port=5000)
