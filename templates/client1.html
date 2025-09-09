@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ support_type }} Support - Client</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: white;
+        }
+        
+        .header {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+            padding: 20px 30px;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        
+        .header h1 {
+            font-size: 2.2rem;
+            margin-bottom: 8px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .header .support-type {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            font-weight: 300;
+        }
+        
+        .chat-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            max-width: 1000px;
+            margin: 20px auto;
+            width: 95%;
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.2);
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+        }
+        
+        #status {
+            padding: 15px 25px;
+            text-align: center;
+            font-weight: 500;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            min-height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .status-connecting {
+            color: #f39c12;
+            animation: pulse 2s infinite;
+        }
+        
+        .status-connected {
+            color: #27ae60;
+        }
+        
+        .status-error {
+            color: #e74c3c;
+            background: rgba(231, 76, 60, 0.1);
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+        
+        #messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: rgba(255,255,255,0.05);
+            min-height: 400px;
+            max-height: 500px;
+        }
+        
+        .message {
+            margin-bottom: 15px;
+            padding: 12px 18px;
+            border-radius: 18px;
+            max-width: 80%;
+            word-wrap: break-word;
+            animation: fadeIn 0.3s ease-in;
+        }
+        
+        .message.client {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            margin-left: auto;
+            text-align: right;
+            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+        }
+        
+        .message.agent {
+            background: linear-gradient(135deg, #27ae60, #219a52);
+            margin-right: auto;
+            box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3);
+        }
+        
+        .message.system {
+            background: rgba(255,255,255,0.1);
+            text-align: center;
+            margin: 10px auto;
+            font-style: italic;
+            opacity: 0.8;
+            max-width: 60%;
+            font-size: 0.9rem;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .input-container {
+            padding: 20px 25px;
+            background: rgba(255,255,255,0.1);
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        #messageForm {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+        
+        #messageInput {
+            flex: 1;
+            padding: 15px 20px;
+            border: none;
+            border-radius: 25px;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            font-size: 1rem;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.3);
+            transition: all 0.3s ease;
+        }
+        
+        #messageInput:focus {
+            outline: none;
+            background: rgba(255,255,255,0.25);
+            border-color: rgba(255,255,255,0.5);
+            box-shadow: 0 0 20px rgba(255,255,255,0.2);
+        }
+        
+        #messageInput::placeholder {
+            color: rgba(255,255,255,0.7);
+        }
+        
+        #messageInput:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        #sendBtn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
+            min-width: 80px;
+        }
+        
+        #sendBtn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(231, 76, 60, 0.4);
+        }
+        
+        #sendBtn:active {
+            transform: translateY(0);
+        }
+        
+        #sendBtn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: 0 4px 15px rgba(231, 76, 60, 0.2);
+        }
+        
+        .typing-indicator {
+            display: none;
+            padding: 10px 20px;
+            font-style: italic;
+            color: rgba(255,255,255,0.7);
+            font-size: 0.9rem;
+        }
+        
+        .connection-status {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 10px 15px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+        
+        .online {
+            background: rgba(39, 174, 96, 0.9);
+            color: white;
+        }
+        
+        .offline {
+            background: rgba(231, 76, 60, 0.9);
+            color: white;
+        }
+        
+        @media (max-width: 768px) {
+            .header {
+                padding: 15px 20px;
+            }
+            
+            .header h1 {
+                font-size: 1.8rem;
+            }
+            
+            .chat-container {
+                margin: 10px;
+                width: calc(100% - 20px);
+                border-radius: 15px;
+            }
+            
+            #messages {
+                min-height: 300px;
+                padding: 15px;
+            }
+            
+            .message {
+                max-width: 90%;
+                padding: 10px 15px;
+            }
+            
+            .input-container {
+                padding: 15px 20px;
+            }
+            
+            #messageForm {
+                gap: 10px;
+            }
+            
+            #messageInput {
+                padding: 12px 18px;
+                font-size: 0.9rem;
+            }
+            
+            #sendBtn {
+                padding: 12px 20px;
+                font-size: 0.9rem;
+                min-width: 70px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>💬 {{ support_type }} Support</h1>
+        <div class="support-type">Client Chat Interface</div>
+    </div>
+    
+    <div class="connection-status" id="connectionStatus">Connecting...</div>
+    
+    <div class="chat-container">
+        <div id="status" class="status-connecting">
+            🔄 Connecting to {{ support_type }} support...
+        </div>
+        
+        <div id="messages"></div>
+        <div class="typing-indicator" id="typingIndicator">Agent is typing...</div>
+        
+        <div class="input-container">
+            <form id="messageForm">
+                <input type="text" id="messageInput" placeholder="Type your message here..." disabled maxlength="500">
+                <button type="submit" id="sendBtn" disabled>Send</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const socket = io();
+        const username = 'Client_' + Math.random().toString(36).substr(2, 9);
+        const room = '{{ room }}';
+        let isConnected = false;
+        
+        const statusDiv = document.getElementById('status');
+        const messagesDiv = document.getElementById('messages');
+        const messageInput = document.getElementById('messageInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const connectionStatus = document.getElementById('connectionStatus');
+        
+        // Connection status management
+        socket.on('connect', function() {
+            isConnected = true;
+            connectionStatus.textContent = '🟢 Online';
+            connectionStatus.className = 'connection-status online';
+            socket.emit('join', {username: username, room: room});
+        });
+        
+        socket.on('disconnect', function() {
+            isConnected = false;
+            connectionStatus.textContent = '🔴 Offline';
+            connectionStatus.className = 'connection-status offline';
+            statusDiv.innerHTML = '<div class="status-error">❌ Connection lost. Trying to reconnect...</div>';
+            messageInput.disabled = true;
+            sendBtn.disabled = true;
+        });
+
+        // Handle messages with improved formatting
+        socket.on('message', function(data) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message';
+            
+            if (data.msg.includes('has joined the chat') || data.msg.includes('has left the chat')) {
+                messageDiv.className += ' system';
+                messageDiv.innerHTML = data.msg;
+                
+                if (data.msg.includes(username + ' has joined')) {
+                    statusDiv.innerHTML = '<div class="status-connected">✅ Connected to {{ support_type }} support! Start typing your message.</div>';
+                    messageInput.disabled = false;
+                    sendBtn.disabled = false;
+                    messageInput.focus();
+                }
+            } else {
+                const isFromClient = data.msg.startsWith(username + ':');
+                messageDiv.className += isFromClient ? ' client' : ' agent';
+                
+                if (isFromClient) {
+                    messageDiv.innerHTML = data.msg.substring(username.length + 2);
+                } else {
+                    messageDiv.innerHTML = data.msg;
+                }
+            }
+            
+            messagesDiv.appendChild(messageDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            
+            // Add subtle notification sound effect (optional)
+            if (!data.msg.includes(username) && !data.msg.includes('has joined')) {
+                playNotificationSound();
+            }
+        });
+
+        // Handle session started event
+        socket.on('session_started', function(data) {
+            statusDiv.innerHTML = `<div class="status-connected">✅ ${data.msg}</div>`;
+            messageInput.disabled = false;
+            sendBtn.disabled = false;
+            messageInput.focus();
+        });
+
+        // Handle user disconnected event
+        socket.on('user_disconnected', function(data) {
+            statusDiv.innerHTML = '<div class="status-error">❌ Agent has left the session</div>';
+            messageInput.disabled = true;
+            sendBtn.disabled = true;
+            
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message system';
+            messageDiv.innerHTML = data.msg;
+            messagesDiv.appendChild(messageDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            
+            // Show reconnect option
+            setTimeout(() => {
+                const retryDiv = document.createElement('div');
+                retryDiv.style.textAlign = 'center';
+                retryDiv.style.marginTop = '20px';
+                retryDiv.innerHTML = '<button onclick="location.reload()" style="padding: 10px 20px; background: #3498db; color: white; border: none; border-radius: 5px; cursor: pointer;">🔄 Try Again</button>';
+                statusDiv.appendChild(retryDiv);
+            }, 2000);
+        });
+
+        // Handle agent unavailable with better UX
+        socket.on('agent_unavailable', function(data) {
+            statusDiv.innerHTML = '<div class="status-error">⚠️ Sorry, an agent is currently helping another client. Please try again in a few minutes.</div>';
+            
+            // Show retry option after some time
+            setTimeout(() => {
+                const retryDiv = document.createElement('div');
+                retryDiv.style.textAlign = 'center';
+                retryDiv.style.marginTop = '20px';
+                retryDiv.innerHTML = '<button onclick="location.reload()" style="padding: 10px 20px; background: #3498db; color: white; border: none; border-radius: 5px; cursor: pointer;">🔄 Try Again</button>';
+                statusDiv.appendChild(retryDiv);
+            }, 3000);
+        });
+
+        // Enhanced message sending with validation
+        document.getElementById('messageForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const message = messageInput.value.trim();
+            
+            if (message && isConnected && !messageInput.disabled) {
+                socket.emit('message', {msg: message});
+                messageInput.value = '';
+                
+                // Disable send button briefly to prevent spam
+                sendBtn.disabled = true;
+                setTimeout(() => {
+                    sendBtn.disabled = false;
+                }, 500);
+            }
+        });
+        
+        // Enhanced input handling
+        messageInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                document.getElementById('messageForm').dispatchEvent(new Event('submit'));
+            }
+        });
+        
+        // Character counter
+        messageInput.addEventListener('input', function() {
+            const remaining = 500 - this.value.length;
+            if (remaining < 50) {
+                this.style.borderColor = remaining < 10 ? '#e74c3c' : '#f39c12';
+            } else {
+                this.style.borderColor = 'rgba(255,255,255,0.3)';
+            }
+        });
+        
+        // Auto-resize and focus management
+        window.addEventListener('load', function() {
+            messageInput.focus();
+        });
+        
+        // Simple notification sound (optional)
+        function playNotificationSound() {
+            try {
+                const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApMm9z11GYQDEek2+22ZSAEOYnU8tGALwYeb8rx2oQ0BBhltSPEiSwGKXzF8N6RQAoUXrTp66hVFApMm9z11GYQDEek2+22ZSAEOYnU8tGALwYeb8rx2oQ0BBhlteFnTxsWPYjU8tGALwYeb8rx2oQ0BBhlteFnTxsWPYjU8tGALwYeb8rx2oQ0BBhlteFnTxsWPYjU8tGALwYeb8rx2oQ0BBhlteFnTxsW');
+                audio.volume = 0.1;
+                audio.play().catch(() => {}); // Ignore errors if audio can't play
+            } catch (e) {
+                // Ignore audio errors
+            }
+        }
+    </script>
+</body>
+</html>

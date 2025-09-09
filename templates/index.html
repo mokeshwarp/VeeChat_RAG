@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Live Support System</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: white;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        .subtitle {
+            font-size: 1.2rem;
+            margin-bottom: 40px;
+            opacity: 0.9;
+        }
+        .sections {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-top: 50px;
+        }
+        .section {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 30px;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        .section h2 {
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+            color: #fff;
+        }
+        .links {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+        .btn:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        .client-btn {
+            background: rgba(52, 152, 219, 0.3);
+            border-color: rgba(52, 152, 219, 0.5);
+        }
+        .agent-btn {
+            background: rgba(46, 204, 113, 0.3);
+            border-color: rgba(46, 204, 113, 0.5);
+        }
+        @media (max-width: 768px) {
+            .sections {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎧 Live Support System</h1>
+        <p class="subtitle">Connect with our support agents for ERP and Sales assistance</p>
+        
+        <div class="sections">
+            <div class="section">
+                <h2>🖥️ ERP Support</h2>
+                <div class="links">
+                    <a href="/client/erp" class="btn client-btn">Join as ERP Client</a>
+                    <a href="/agent/erp" class="btn agent-btn">Join as ERP Agent</a>
+                </div>
+            </div>
+            
+            <div class="section">
+                <h2>📊 Sales Support</h2>
+                <div class="links">
+                    <a href="/client/sales" class="btn client-btn">Join as Sales Client</a>
+                    <a href="/agent/sales" class="btn agent-btn">Join as Sales Agent</a>
+                </div>
+            </div>
+        </div>
+        
+        <div style="margin-top: 50px; opacity: 0.8;">
+            <p><strong>How it works:</strong></p>
+            <p>• Clients can connect to get support for ERP or Sales issues</p>
+            <p>• Only one client can be served per support type at a time</p>
+            <p>• Agents can join to provide real-time assistance</p>
+        </div>
+    </div>
+</body>
+</html>
