@@ -21,10 +21,6 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             cd ~/VeeChat_RAG
-          
-            # Discard any local changes to avoid merge conflicts
-            git reset --hard
-            git clean -fd
             git pull origin main
           
             source venv/bin/activate
@@ -35,8 +31,5 @@ jobs:
             pkill -f gunicorn || true
           
             # Start Gunicorn fully detached
-            nohup ~/VeeChat_RAG/venv/bin/gunicorn \
-              --workers 3 \
-              --bind 0.0.0.0:5000 \
-              live_agent:app \
-              > gunicorn.log 2>&1 < /dev/null &
+            nohup ~/VeeChat_RAG/venv/bin/gunicorn --workers 3 --bind 0.0.0.0:5000 live_agent:app > gunicorn.log 2>&1 < /dev/null &
+
