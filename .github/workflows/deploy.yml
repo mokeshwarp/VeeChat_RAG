@@ -1,18 +1,14 @@
 name: Deploy to EC2
-
 on:
   push:
     branches:
       - main   # run only when you push to main branch
-
 jobs:
   deploy:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
-
       - name: Copy files to EC2 and deploy
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -20,14 +16,8 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            cd ~/VeeChat_RAG
+            cd ~/VeeChat_RAG  # go to your project folder
             git pull origin main
-          
             source venv/bin/activate
             pip install -r requirements.txt
-            deactivate
-          
-            # Restart Flask app via systemd
-            sudo systemctl daemon-reload
-            sudo systemctl restart flaskapp
-            sudo systemctl enable flaskapp
+            sudo systemctl restart veechat   # restart service (you need systemd service created for Flask)
