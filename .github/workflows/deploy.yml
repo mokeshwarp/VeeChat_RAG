@@ -22,6 +22,13 @@ jobs:
           script: |
             cd ~/VeeChat_RAG  # go to your project folder
             git pull origin main
+
             source venv/bin/activate
             pip install -r requirements.txt
-            sudo systemctl restart flaskapp   # restart service (you need systemd service created for Flask)
+            deactivate
+
+            # Kill any existing Gunicorn process
+            pkill -f gunicorn || true
+
+            # Start Gunicorn in background
+            nohup ~/VeeChat_RAG/venv/bin/gunicorn --workers 3 --bind 0.0.0.0:5000 live_agent:app > gunicorn.log 2>&1 &
