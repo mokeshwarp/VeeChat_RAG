@@ -20,15 +20,16 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            cd ~/VeeChat_RAG  # go to your project folder
+            cd ~/VeeChat_RAG
             git pull origin main
-
+          
             source venv/bin/activate
             pip install -r requirements.txt
             deactivate
-
+          
             # Kill any existing Gunicorn process
             pkill -f gunicorn || true
-
-            # Start Gunicorn in background
-            nohup ~/VeeChat_RAG/venv/bin/gunicorn --workers 3 --bind 0.0.0.0:5000 live_agent:app > gunicorn.log 2>&1 &
+          
+            # Start Gunicorn fully detached
+            nohup ~/VeeChat_RAG/venv/bin/gunicorn --workers 3 --bind 0.0.0.0:5000 live_agent:app > gunicorn.log 2>&1 < /dev/null &
+            disown
