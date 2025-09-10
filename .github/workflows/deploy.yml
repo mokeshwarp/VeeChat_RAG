@@ -21,15 +21,19 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             cd ~/VeeChat_RAG
+          
+            # Reset to latest repo state (discard local edits)
+            git reset --hard
+            git clean -fd
             git pull origin main
           
+            # Update dependencies
             source venv/bin/activate
             pip install -r requirements.txt
             deactivate
           
-            # Kill old Gunicorn process
-            pkill -f gunicorn || true
+            # Kill old tmux session if running
+            tmux kill-session -t veechat || true
           
-            # Start Gunicorn fully detached
-            nohup ~/VeeChat_RAG/venv/bin/gunicorn --workers 3 --bind 0.0.0.0:5000 live_agent:app > gunicorn.log 2>&1 < /dev/null &
-
+            # Start new Gunicorn inside tmux
+            tmux new -d -s veechat "cd ~/VeeChat_RAG && ~/VeeChat_RAG/venv/bin/gunicorn --workers 3 --bind 0.0.0.0:5000 live_agent:app > gunicorn.log 2>&1"
