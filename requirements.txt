@@ -3,4 +3,3 @@ flask-socketio
 python-engineio
 python-socketio
 eventlet
-pandas
