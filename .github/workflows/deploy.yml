@@ -22,18 +22,14 @@ jobs:
           script: |
             cd ~/VeeChat_RAG
             git pull origin main
-
-            # Update dependencies
+          
             source venv/bin/activate
             pip install -r requirements.txt
             deactivate
+          
+            # Kill old tmux session if exists
+            tmux kill-session -t veechat || true
+          
+            # Start new Gunicorn inside detached tmux
+            tmux new -d -s veechat "cd ~/VeeChat_RAG && ~/VeeChat_RAG/venv/bin/gunicorn --workers 3 --bind 0.0.0.0:5000 live_agent:app > gunicorn.log 2>&1"
 
-            # Kill any existing Gunicorn process
-            pkill -f "gunicorn --workers" || true
-
-            # Start Gunicorn in background (completely detached)
-            nohup ~/VeeChat_RAG/venv/bin/gunicorn \
-              --workers 3 \
-              --bind 0.0.0.0:5000 \
-              live_agent:app \
-              > ~/VeeChat_RAG/gunicorn.log 2>&1 < /dev/null &
